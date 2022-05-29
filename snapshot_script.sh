@@ -1,1 +1,1 @@
-python3 ./snapshot.py
+python /mnt/geron/timelaps/script/snapshot.py
