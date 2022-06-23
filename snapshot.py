@@ -13,7 +13,7 @@ CONF_ROOT_PATH = 'rootdir'
 CONF_DEBUGGING = 'debug'
 
 DATE_FORMAT = '%y_%m_%d__%H_%M_%S' 
-CONFIG_FILE_PATH = '/mnt/geron/timelaps/script/config/cameras'
+CONFIG_FILE_PATH = ''
 
 def make_dir(path):
     """
