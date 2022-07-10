@@ -1,19 +1,25 @@
 from datetime import datetime
+from pathlib import Path
 from PIL import Image
 
 import requests
+import logging
 import json
 import io
 import os
 
-DEBUGGING = False
 
 CONF_CAMERAS = 'cameras'
 CONF_ROOT_PATH = 'rootdir'
-CONF_DEBUGGING = 'debug'
 
 DATE_FORMAT = '%y_%m_%d__%H_%M_%S' 
-CONFIG_FILE_PATH = '/mnt/geron/timelaps/script/config/cameras'
+SNAP_URL = 'http://{}.localdomain/snap.jpeg'
+CONFIG_FILE_PATH = '/mnt/geron/timelaps/script/config/cameras.json'
+
+LOGGER_NAME = 'timelaps_logs'
+LOG_FILE_NAME = 'timelaps_logs.log'
+LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+
 
 def make_dir(path):
     """
@@ -26,17 +32,23 @@ def make_dir(path):
         os.mkdir(path)
 
 
-def pprint(txt):
+def get_logger(logger_name, log_path, level=logging.DEBUG):
     """
-    If 'debug' is on then prints 'txt'
+    Gets a logger for the current session
 
-    :param txt:     The text we want to print
-    :type txt:      str
+    :param txt:     The name of our logger
+    :type txt:      Path the logs will be written to
     """
-    global DEBUGGING
-    # Printing the content but making it look slick
-    if DEBUGGING:
-        print('[+]\t{}'.format(txt))
+    logger = logging.getLogger(logger_name)  
+    logger.setLevel(logging.DEBUG)
+
+    file_handler = logging.FileHandler(log_path)
+    formatter = logging.Formatter(LOG_FORMAT)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+    return logger
 
 
 def get_snap(ip):
@@ -46,19 +58,26 @@ def get_snap(ip):
     :param ip:      The ip in which the camera is found
     :type ip:       str
     """
-    pprint('trying getting the snapshot from {}'.format(ip))
+    global logger
+
+    logger.info('trying getting the snapshot from {}'.format(ip))
 
     # Trying to retrieve the snapshot
+    url = SNAP_URL.format(ip)
     try:
-        jpeg = requests.get('http://{}.localdomain/snap.jpeg'.format(ip), timeout=5)
+        logger.info('sending a get requests for {}'.format(url))
+        jpeg = requests.get(url, timeout=5)
     except requests.exceptions.Timeout as e:
-        pprint('ip did not respond ):')
+        logger.error('{} did not respond ):'.format(ip))
         return None
     except requests.exceptions.RequestException as e:
-        pprint('could not manage to get the snap')
-        raise e
+        logger.error('could not manage to get the snap...\n\t{}'.format(e))
+        return None
+    except Exception as e:
+        logger.error('A new error had occurred!\n\t{}'.format(e))
+        return None
 
-    pprint('got the snapshot with status code {}'.format(jpeg.status_code))
+    logger.info('got the snapshot with status code {}'.format(jpeg.status_code))
 
     # Checking if we indeed got the snapshot
     if jpeg.status_code == 200:
@@ -67,7 +86,7 @@ def get_snap(ip):
 
         return jpeg_image
     else:
-        pprint('oops, something went wrong...')
+        logger.error('got an unexpected error code {} instead of 200...'.format(jpeg.status_code))
         return None
 
 
@@ -80,12 +99,19 @@ def snap_cameras(cam_dict, root_dir):
     :param root_dir:    The directory in which we store our images
     :type root_dir:     str
     """
+    global logger
+
+    logger.info('going over all of the cameras getting some nice pics :)')
+
     for camera in cam_dict.keys():
         # The image that we want to save
         my_jpeg = get_snap(camera)
 
+        if my_jpeg is None:
+            return
+
         # The directory to which we shall save the image to
-        my_dir = os.path.join(root_dir, cam_dict[camera])
+        my_dir = str(Path(root_dir) / Path(cam_dict[camera]))
         make_dir(my_dir)
 
         # The file name with the current date yo
@@ -93,23 +119,13 @@ def snap_cameras(cam_dict, root_dir):
         my_file = '{}_{}.jpeg'.format(cam_dict[camera], my_date_on_path)
 
         # The full path!
-        my_path = os.path.join(my_dir, my_file)
-
-        # If we managed to get the file
-        if my_jpeg:
-            my_jpeg.save(my_path)
-
-
-def remap_keys(cam_dict):
-    for key in list(cam_dict.keys()):
-        new_key = key.replace(' ', '-')
-        if new_key not in cam_dict:
-            cam_dict[new_key] = cam_dict[key]
-            del cam_dict[key]
+        my_path = str(Path(my_dir) / Path(my_file))
+        my_jpeg.save(my_path)
 
 
 def main():
-    global DEBUGGING
+    global logger
+
 
     with open(CONFIG_FILE_PATH, 'r') as f:
         data = f.read()
@@ -117,20 +133,15 @@ def main():
 
     assert CONF_CAMERAS in conf, 'Could not find "{}" in the config file'.format(CONF_CAMERAS)
     assert CONF_ROOT_PATH in conf, 'Could not find "{}" in the config file'.format(CONF_ROOT_PATH)
-    print(conf[CONF_ROOT_PATH])
-    assert os.path.exists(conf[CONF_ROOT_PATH]), 'Root path does not exists :('
-
-    DEBUGGING = True if CONF_DEBUGGING in conf and conf[CONF_DEBUGGING].lower() == 'true' else False
-    pprint('We are debugging!')
+    assert Path(conf[CONF_ROOT_PATH]).exists(), 'Root path does not exists :('
+    
+    logger = get_logger(LOGGER_NAME, str(Path(conf[CONF_ROOT_PATH]) / Path(LOG_FILE_NAME)))
 
     cameras_dict = {}
     for i in conf[CONF_CAMERAS]:
         cameras_dict.update(i)
 
-    remap_keys(cameras_dict)
-
     snap_cameras(cameras_dict, conf[CONF_ROOT_PATH])
-
 
 
 if __name__ == '__main__':
