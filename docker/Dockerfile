@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 
 ENV PYTHONPATH=$PYTHONPATH:/camera_snapshots/
 
-RUN crontab -l | { cat; echo "* * * * * /opt/venv/bin/python /camera_snapshots/snapshot.py -c /camera_snapshots/config/cameras_ip.json"; } | crontab -
+RUN crontab -l | { cat; echo "00 14 * * * /opt/venv/bin/python /camera_snapshots/snapshot.py -c /camera_snapshots/config/cameras_ip.json"; } | crontab -
 
 # Run the command on container startup
 CMD ["cron", "-f"]
