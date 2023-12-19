@@ -24,7 +24,6 @@ jobs:
     - name: Build and push camera_snapshots
       uses: docker/build-push-action@v3
       with:
-        ssh: default
         file: ./docker/Dockerfile
         context: .
         push: ${{startsWith(github.ref, 'refs/tags/')}}
