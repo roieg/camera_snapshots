@@ -3,8 +3,6 @@ name: Docker build and push
 
 on:
   push:
-    tags:
-      -  '*'
 
 jobs:
   docker:
@@ -23,7 +21,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-      name: Build and push camera_snapshots
+    - name: Build and push camera_snapshots
       uses: docker/build-push-action@v3
       with:
         ssh: default
