@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 
 ENV PYTHONPATH=$PYTHONPATH:/camera_snapshots/
 
-RUN crontab -l | { cat; echo "* * * * * /usr/bin/python /camera_snapshots/snapshot.py"; } | crontab -
+RUN crontab -l | { cat; echo "* * * * * /opt/venv/bin/python /camera_snapshots/snapshot.py"; } | crontab -
 
 # Run the command on container startup
 CMD ["cron", "-f"]
