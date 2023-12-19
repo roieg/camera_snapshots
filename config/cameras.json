@@ -1,0 +1,16 @@
+{
+	"cameras" : [
+		{"UVC-G3---Backyard" : "Backyard"},
+ 		{"UVC-G3---West" : "West"},
+ 		{"UVC-G3---Entrance" : "Entrance"},
+ 		{"UVC-G3---Front-North" : "Front North"},
+ 		{"UVC-G3---North" : "North"},
+ 		{"UVC-G3---Parents-Bedroom" : "Parents Bedroom"},
+ 		{"UVC-G3---Pergola" : "Pergola"},
+ 		{"UVC-G3---South" : "South"},
+ 		{"UVC-G3---South-Front" : "South Front"},
+ 		{"UVC-G3---Swimming-Pool" : "Swimming Pool"},
+ 		{"UVC-G3-Flex---English-Yard" : "English Yard"}
+ 	],
+ 	"rootdir" : "./pictures"
+} 
