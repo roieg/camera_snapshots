@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from pathlib import Path
 from PIL import Image
@@ -8,13 +9,14 @@ import json
 import io
 import os
 
-
+logger = None
 CONF_CAMERAS = 'cameras'
 CONF_ROOT_PATH = 'rootdir'
 
-DATE_FORMAT = '%y_%m_%d__%H_%M_%S' 
-SNAP_URL = 'http://{}.localdomain/snap.jpeg'
-CONFIG_FILE_PATH = '/mnt/geron/timelaps/script/config/cameras.json'
+DATE_FORMAT = '%y_%m_%d__%H_%M_%S'
+SNAP_URL = 'http://{}/snap.jpeg'
+CONFIG_FILE_PATH = './config/cameras_ip.json'
+OUTPUT_DIR = '/pictures'
 
 LOGGER_NAME = 'timelaps_logs'
 LOG_FILE_NAME = 'timelaps_logs.log'
@@ -39,7 +41,7 @@ def get_logger(logger_name, log_path, level=logging.DEBUG):
     :param txt:     The name of our logger
     :type txt:      Path the logs will be written to
     """
-    logger = logging.getLogger(logger_name)  
+    logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
 
     file_handler = logging.FileHandler(log_path)
@@ -126,15 +128,23 @@ def snap_cameras(cam_dict, root_dir):
 def main():
     global logger
 
+    parser = argparse.ArgumentParser(description='Camera snapshots')
+    parser.add_argument('-o', '--outdir', type=str, metavar='outdir',
+                        help='pictures output dir (default: %(default)s)', default=OUTPUT_DIR)
+    parser.add_argument('-c', '--config', help='config_file', default=CONFIG_FILE_PATH)
 
-    with open(CONFIG_FILE_PATH, 'r') as f:
+    args = parser.parse_args()
+
+    make_dir(args.outdir)
+
+    with open(args.config, 'r') as f:
         data = f.read()
     conf = json.loads(data)
 
     assert CONF_CAMERAS in conf, 'Could not find "{}" in the config file'.format(CONF_CAMERAS)
     assert CONF_ROOT_PATH in conf, 'Could not find "{}" in the config file'.format(CONF_ROOT_PATH)
     assert Path(conf[CONF_ROOT_PATH]).exists(), 'Root path does not exists :('
-    
+
     logger = get_logger(LOGGER_NAME, str(Path(conf[CONF_ROOT_PATH]) / Path(LOG_FILE_NAME)))
 
     cameras_dict = {}
@@ -146,8 +156,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-

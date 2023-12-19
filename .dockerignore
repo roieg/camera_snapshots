@@ -1,0 +1,8 @@
+venv
+pictures
+Dockerfile
+.github
+.gitignore
+README.md
+docker
+__pycache__
