@@ -143,15 +143,15 @@ def main():
 
     assert CONF_CAMERAS in conf, 'Could not find "{}" in the config file'.format(CONF_CAMERAS)
     assert CONF_ROOT_PATH in conf, 'Could not find "{}" in the config file'.format(CONF_ROOT_PATH)
-    assert Path(conf[CONF_ROOT_PATH]).exists(), 'Root path does not exists :('
+    assert Path(args.outdir).exists(), 'Root path does not exists :('
 
-    logger = get_logger(LOGGER_NAME, str(Path(conf[CONF_ROOT_PATH]) / Path(LOG_FILE_NAME)))
+    logger = get_logger(LOGGER_NAME, str(Path(args.outdir) / Path(LOG_FILE_NAME)))
 
     cameras_dict = {}
     for i in conf[CONF_CAMERAS]:
         cameras_dict.update(i)
 
-    snap_cameras(cameras_dict, conf[CONF_ROOT_PATH])
+    snap_cameras(cameras_dict, args.outdir)
 
 
 if __name__ == '__main__':
